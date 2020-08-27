@@ -11,21 +11,20 @@ import zipfile
 current_version_url = 'https://www.drupal.org/download-latest/tar.gz'
 home_directory = os.path.dirname(os.path.realpath(__file__))
 temp_dir = './tempdir'
+zipped_package_location = None
+
+forbidden_folders = {'sites', 'modules', 'profiles', 'themes', 'vendor'}
 
 def check_temp_dir():
     if not path.exists(temp_dir):
         os.mkdir(temp_dir)
 
-def unpack_zip(source, destination):
-    zipReference = zipfile.ZipFile(source, 'r')
-    zipReference.extractall(destination)
-    zipReference.close()
-    print("Done")
-
-def unpack_gz(source, destination):
-    tarball = tarfile.open(source, 'r:gz')
-    tarball.extractall(path=destination)
-    print("Done")
+def replace_item(source, destination):
+    if path.isdir(destination):
+        remove_directory(destination)
+    else:
+        remove_file(destination)
+    shutil.move(source, destination)
 
 def unpack_zip_into(source, destination, replace=False):
     zipReference = zipfile.ZipFile(source, 'r')
@@ -50,14 +49,6 @@ def unpack_zip_into(source, destination, replace=False):
     
     zipReference.close()
     print("Done")
-
-def replace_item(source, destination):
-    if path.isdir(destination):
-        remove_directory(destination)
-    else:
-        remove_file(destination)
-    shutil.move(source, destination)
-
 
 def unpack_gz_into(source, destination, replace=False):
     tar = tarfile.open(source, 'r:gz')
@@ -115,8 +106,12 @@ if __name__ == "__main__":
     print("Args and options", args, options)
     print(dir(options))
 
-    if options.local_path is not None and not path.exists("{}/{}".format(home_directory, options.local_path)):
-        raise Exception("Error: Project {} doesn't exist".format(options.local_path))
+    if options.local_path is not None:
+        if not path.exists("{}/{}".format(home_directory, options.local_path)):
+            raise Exception("Error: Project {} doesn't exist".format(options.local_path))
+        else:
+            zipped_package_location = "{}/{}".format(home_directory, options.local_path)
+            print("Updating from {}".format(zipped_package_location))
 
     elif options.download_url is not None:
         # Download zipped project
@@ -124,7 +119,9 @@ if __name__ == "__main__":
     else:
         raise Exception("Error: Zipped Drupal project or download URL must be provided")
 
-    drupal_core_file = open(drupal_core_file)
-    drupal_lines = drupal_core_file.readlines()
-    for line in drupal_lines[69:100]:
-        print(line)
+    if tarfile.is_tarfile(zipped_package_location):
+        print("Tarfile")
+    elif zipfile.is_zipfile(zipped_package_location):
+        print("Zip File")
+    else:
+        raise Exception("Not a valid update package.")
