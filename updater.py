@@ -2,6 +2,7 @@
 from optparse import OptionParser
 import os
 import os.path as path
+import requests
 import shutil
 import sys
 import tarfile
@@ -10,10 +11,11 @@ import zipfile
 
 current_version_url = 'https://www.drupal.org/download-latest/tar.gz'
 home_directory = os.path.dirname(os.path.realpath(__file__))
-temp_dir = './tempdir'
+temp_dir = './.tempdir'
 zipped_package_location = None
 
-forbidden_folders = {'sites', 'modules', 'profiles', 'themes', 'vendor'}
+forbidden_folders = {'sites', 'modules', 'profiles', 'themes'}
+forbidden_files = {'.htaccess'}
 
 def check_temp_dir():
     if not path.exists(temp_dir):
@@ -44,7 +46,16 @@ def unpack_zip_into(source, destination, replace=False):
             replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
             print("Replaced {}.".format(file))
         else:
-            print("Skipping {}. Already Exists. ".format(file))
+            split_file = file.split('/')
+            if len(split_file) > 1:
+                if split_file[1] in forbidden_folders or split_file[-1] in forbidden_files:
+                    print("Skipping {}. Already exists.".format(file))
+                else:
+                    try:
+                        replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
+                        print("Replaced {}.".format(file))
+                    except:
+                        print("{} locked.")
     shutil.rmtree(temp_source_dir)
     
     zipReference.close()
@@ -70,7 +81,16 @@ def unpack_gz_into(source, destination, replace=False):
             replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
             print("Replaced {}.".format(file))
         else:
-            print("Skipping {}. Already exists.".format(file))
+            split_file = file.split('/')
+            if len(split_file) > 1:
+                if split_file[1] in forbidden_folders or split_file[-1] in forbidden_files:
+                    print("Skipping {}. Already exists.".format(file))
+                else:
+                    try:
+                        replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
+                        print("Replaced {}.".format(file))
+                    except:
+                        print("{} locked.")
     shutil.rmtree(temp_source_dir)
     print("Done")
 
@@ -101,10 +121,7 @@ if __name__ == "__main__":
     if len(args) > 0:
         drupal_project_directory = home_directory+"/"+args[0]
     else:
-        raise Exception("Error: Drupal project not provided")
-    
-    print("Args and options", args, options)
-    print(dir(options))
+        raise Exception("Error: Drupal project not provided.")
 
     if options.local_path is not None:
         if not path.exists("{}/{}".format(home_directory, options.local_path)):
@@ -115,13 +132,15 @@ if __name__ == "__main__":
 
     elif options.download_url is not None:
         # Download zipped project
-        pass
+        current_version_url = options.download_url
     else:
         raise Exception("Error: Zipped Drupal project or download URL must be provided")
 
     if tarfile.is_tarfile(zipped_package_location):
-        print("Tarfile")
+        unpack_gz_into(zipped_package_location, args[0])
+
     elif zipfile.is_zipfile(zipped_package_location):
-        print("Zip File")
+        unpack_zip_into(zipped_package_location, args[0])
+
     else:
         raise Exception("Not a valid update package.")
