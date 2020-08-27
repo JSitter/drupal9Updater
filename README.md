@@ -7,4 +7,6 @@ This script is designed to run on Hostgator Shared servers that don't want to ru
 
 `-d` or `--download` Download update from url.
 
+`-i` or `--input` Update from local zipped Drupal package.
+
 `-h` Show help screen.
