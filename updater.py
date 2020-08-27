@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import sys
-import zipfile
+from optparse import OptionParser
 import os
+import os.path as path
+import shutil
+import sys
+import tarfile
 import urllib.request
-
-
+import zipfile
 
 current_version_url = 'https://www.drupal.org/download-latest/tar.gz'
 home_directory = os.path.dirname(os.path.realpath(__file__))
@@ -95,30 +97,32 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     parser.add_option("-d", "--download",
                         help="Download update from url.",
-                        dest="download")
+                        dest="download_url")
+
+    parser.add_option("-i", "--input",
+                        help="Path to compressed Drupal package.",
+                        dest="local_path")
 
     (options, args) = parser.parse_args()
     home_directory = path.dirname(path.realpath(__file__))
+    
 
-    if len(args) > 1:
-        final_project_path = home_directory+"/"+args[1]
-        zipped_project_path = home_directory+"/"+args[0]
+    if len(args) > 0:
+        drupal_project_directory = home_directory+"/"+args[0]
     else:
-        raise Exception("Error: 2 arguments required {} provided".format(len(args)-1))
+        raise Exception("Error: Drupal project not provided")
+    
+    print("Args and options", args, options)
+    print(dir(options))
 
-    if not path.exists(zipped_project_path):
-        raise Exception("Error: Zipped Project doesn't exist")
+    if options.local_path is not None and not path.exists("{}/{}".format(home_directory, options.local_path)):
+        raise Exception("Error: Project {} doesn't exist".format(options.local_path))
 
-    if len(sys.argv) > 1:
-        project_directory = sys.argv[1]
-        project_path = home_directory+"/"+sys.argv[1]
-        drupal_core_file = project_path + "/core/lib/Drupal.php"
+    elif options.download_url is not None:
+        # Download zipped project
+        pass
     else:
-        print("ERROR: Project Directory Not Specified")
-        exit()
-
-    print("home directory", home_directory)
-    print("project directory", project_directory)
+        raise Exception("Error: Zipped Drupal project or download URL must be provided")
 
     drupal_core_file = open(drupal_core_file)
     drupal_lines = drupal_core_file.readlines()
