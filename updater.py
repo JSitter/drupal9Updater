@@ -39,27 +39,28 @@ def unpack_zip_into(source, destination, replace=False):
     files = os.listdir(temp_source_dir)
 
     for file in files:
-        file_destination = "{}/{}".format(destination, file)
-        if not path.exists(file_destination):
-            shutil.move("{}/{}".format(temp_source_dir, file), destination)
-        elif replace:
-            replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
-            print("Replaced {}.".format(file))
-        else:
-            split_file = file.split('/')
-            if len(split_file) > 1:
-                if split_file[1] in forbidden_folders or split_file[-1] in forbidden_files:
-                    print("Skipping {}. Already exists.".format(file))
-                else:
-                    try:
-                        replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
-                        print("Replaced {}.".format(file))
-                    except:
-                        print("{} locked.")
+        update_file(temp_source_dir, file, destination, replace)
+        
     shutil.rmtree(temp_source_dir)
-    
     zipReference.close()
     print("Done")
+
+def update_file(temp_location, file, destination, replace=False):
+    file_destination = "{}/{}".format(destination, file)
+    if not path.exists(file_destination):
+        shutil.move("{}/{}".format(temp_location, file), destination)
+    elif replace:
+        replace_item("{}/{}".format(temp_location, file), "{}/{}".format(destination, file))
+        print("Replaced {}.".format(file))
+    else:
+        if file in forbidden_folders or file in forbidden_files:
+            print("Skipping {}. Already exists.".format(file))
+        else:
+            try:
+                replace_item("{}/{}".format(temp_location, file), "{}/{}".format(destination, file))
+                print("Replaced {}.".format(file))
+            except:
+                print("{} locked.")
 
 def unpack_gz_into(source, destination, replace=False):
     tar = tarfile.open(source, 'r:gz')
@@ -74,23 +75,7 @@ def unpack_gz_into(source, destination, replace=False):
     files = os.listdir(temp_source_dir)
 
     for file in files:
-        file_destination = "{}/{}".format(destination, file)
-        if not path.exists(file_destination):
-            shutil.move("{}/{}".format(temp_source_dir, file), destination)
-        elif replace:
-            replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
-            print("Replaced {}.".format(file))
-        else:
-            split_file = file.split('/')
-            if len(split_file) > 1:
-                if split_file[1] in forbidden_folders or split_file[-1] in forbidden_files:
-                    print("Skipping {}. Already exists.".format(file))
-                else:
-                    try:
-                        replace_item("{}/{}".format(temp_source_dir, file), "{}/{}".format(destination, file))
-                        print("Replaced {}.".format(file))
-                    except:
-                        print("{} locked.")
+        update_file(temp_source_dir, file, destination, replace)
     shutil.rmtree(temp_source_dir)
     print("Done")
 
@@ -110,13 +95,20 @@ if __name__ == "__main__":
                         help="Download update from url.",
                         dest="download_url")
 
-    parser.add_option("-i", "--input",
+    parser.add_option("-l", "--local",
                         help="Path to compressed Drupal package.",
                         dest="local_path")
 
+    parser.add_option("-f", "--force",
+                        help="Force replacement of all files.",
+                        dest="force")
+
     (options, args) = parser.parse_args()
     home_directory = path.dirname(path.realpath(__file__))
-    
+    if args[0][-1] == '/':
+        drupal_install_location = args[0][:-1]
+    else:
+        drupal_install_location = args[0]
 
     if len(args) > 0:
         drupal_project_directory = home_directory+"/"+args[0]
