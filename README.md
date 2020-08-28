@@ -1,6 +1,6 @@
 # Drupal9 Semi-Auto Updater
 
-Update your Drupal 8 Drupal 9 Projects with relative ease.
+Update your Drupal 8 or Drupal 9 Projects with relative ease.
 
 This script is designed to run on Hostgator Shared servers that don't want to run scripts using Python3. In order to run the updater on Hostgator sites use hostgator-runner.sh script to force the server to run the updater using a more modern version of Python, otherwise just run ./updater.py when not using on Hostgator.
 
