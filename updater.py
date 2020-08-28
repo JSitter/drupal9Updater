@@ -88,7 +88,6 @@ def remove_directory(source):
     shutil.rmtree(source)
 
 if __name__ == "__main__":
-
     usage = "usage: %prog [options] drupal_installation_location"
     parser = OptionParser(usage=usage)
     parser.add_option("-d", "--download",
@@ -105,6 +104,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     home_directory = path.dirname(path.realpath(__file__))
+
     if args[0][-1] == '/':
         drupal_install_location = args[0][:-1]
     else:
