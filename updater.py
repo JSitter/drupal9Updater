@@ -28,23 +28,6 @@ def replace_item(source, destination):
         remove_file(destination)
     shutil.move(source, destination)
 
-def unpack_zip_into(source, destination, replace=False):
-    zipReference = zipfile.ZipFile(source, 'r')
-    allfiles = zipReference.namelist()
-    temp_source_dir = "{}/{}".format(temp_dir, allfiles[0])
-    check_temp_dir()
-    
-    zipReference = zipfile.ZipFile(source, 'r')
-    zipReference.extractall(temp_dir)
-    files = os.listdir(temp_source_dir)
-
-    for file in files:
-        update_file(temp_source_dir, file, destination, replace)
-        
-    shutil.rmtree(temp_source_dir)
-    zipReference.close()
-    print("Done")
-
 def update_file(temp_location, file, destination, replace=False):
     file_destination = "{}/{}".format(destination, file)
     if not path.exists(file_destination):
@@ -62,6 +45,31 @@ def update_file(temp_location, file, destination, replace=False):
             except:
                 print("{} locked.")
 
+def remove_file(source):
+    print("remove file: {}".format(source))
+    os.remove(source)
+
+def remove_directory(source):
+    print("Remove directory {}".format(source))
+    shutil.rmtree(source)
+
+def unpack_zip_into(source, destination, replace=False):
+    zipReference = zipfile.ZipFile(source, 'r')
+    allfiles = zipReference.namelist()
+    temp_source_dir = "{}/{}".format(temp_dir, allfiles[0])
+    check_temp_dir()
+    
+    zipReference = zipfile.ZipFile(source, 'r')
+    zipReference.extractall(temp_dir)
+    files = os.listdir(temp_source_dir)
+
+    for file in files:
+        update_file(temp_source_dir, file, destination, replace)
+        
+    shutil.rmtree(temp_source_dir)
+    zipReference.close()
+    print("Done")
+
 def unpack_gz_into(source, destination, replace=False):
     tar = tarfile.open(source, 'r:gz')
     allfiles = tar.getnames()
@@ -78,14 +86,6 @@ def unpack_gz_into(source, destination, replace=False):
         update_file(temp_source_dir, file, destination, replace)
     shutil.rmtree(temp_source_dir)
     print("Done")
-
-def remove_file(source):
-    print("remove file: {}".format(source))
-    os.remove(source)
-
-def remove_directory(source):
-    print("Remove directory {}".format(source))
-    shutil.rmtree(source)
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] drupal_installation_location"
